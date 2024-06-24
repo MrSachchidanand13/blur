@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Face dectection and blur</title>
+    <style>
+        body {
+            background: linear-gradient(to right, lime, orange);
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin: 20px;
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        img {
+            max-width: 100%;
+            margin-top: 20px;
+        }
+        button, .file-label {
+            background: linear-gradient(to right, lime, orange);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+            display: inline-block;
+        }
+        button:hover, .file-label:hover {
+            background: linear-gradient(to right, orange, lime);
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .image-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        .image-wrapper {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload and Detect Face with blur Image</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <label for="imageInput" class="file-label">Choose File</label>
+            <input type="file" id="imageInput" name="image" accept="image/*">
+            <br><br>
+            <button type="button" onclick="uploadAndProcess()">Upload & Process</button>
+        </form>
+        <br><br>
+        <div id="imagePreview" style="display: none;">
+            <h2>Processed Images</h2>
+            <div class="image-container">
+                <div class="image-wrapper">
+                    <h3>Face Contours</h3>
+                    <img id="contoursImage">
+                    <br><br>
+                    <button onclick="downloadImage('contoursImage', 'face_contours.jpg')">Download Face Contours</button>
+                </div>
+                <div class="image-wrapper">
+                    <h3>Blurred Faces</h3>
+                    <img id="blurredImage">
+                    <br><br>
+                    <button onclick="downloadImage('blurredImage', 'blurred_faces.jpg')">Download Blurred Faces</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelector('.file-label').addEventListener('click', function() {
+            document.getElementById('imageInput').click();
+        });
+
+        function uploadAndProcess() {
+            var formData = new FormData();
+            formData.append('image', document.getElementById('imageInput').files[0]);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('imagePreview').style.display = 'block';
+                    
+                    var contoursImage = document.getElementById('contoursImage');
+                    contoursImage.src = 'data:image/jpeg;base64,' + data.img_contours;
+                    
+                    var blurredImage = document.getElementById('blurredImage');
+                    blurredImage.src = 'data:image/jpeg;base64,' + data.img_blur;
+                } else {
+                    alert('Failed to process image.');
+                }
+            })
+            .catch(error => {
+                console.error('Error occurred while uploading image:', error);
+                alert('Error occurred while uploading image.');
+            });
+        }
+
+        function downloadImage(imgId, fileName) {
+            var image = document.getElementById(imgId);
+            var imageSrc = image.src;
+            
+            // Create an anchor element and set the href to the image data
+            var downloadLink = document.createElement('a');
+            downloadLink.href = imageSrc;
+            downloadLink.download = fileName;
+            
+            // Append the anchor element to the body and click it programmatically
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+    </script>
+</body>
+</html>
